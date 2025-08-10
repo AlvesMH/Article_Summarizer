@@ -33,10 +33,6 @@ class SummarizeBody(BaseModel):
     detail: int = 40
     temperature: float = 0.2
 
-@app.get("/healthz")
-async def healthz():
-    return {"ok": True}
-
 @app.post("/api/summarize")
 async def summarize(body: SummarizeBody):
     if not (body.url or body.text):
@@ -93,16 +89,16 @@ async def upload(file: UploadFile = File(...), detail: int = Form(40), temperatu
         "stats": {"chunks_total": len(chunks), "chunks_used": len(idxs)}
     }
 
+# We will copy frontend/dist into this folder during the Render build step
 FRONTEND_DIST = Path(__file__).resolve().parent.parent / "frontend_dist"
 
-# Serve React build at /
-FRONTEND_DIST = Path(__file__).resolve().parent.parent / "frontend_dist"
+# Log what we computed so we can see it in Render logs
+print(f"[BOOT] FRONTEND_DIST => {FRONTEND_DIST} exists={FRONTEND_DIST.exists()}")
 
-# Mount the built assets only if present (local dev may not build)
 if FRONTEND_DIST.exists():
     app.mount("/", StaticFiles(directory=str(FRONTEND_DIST), html=True), name="static")
 
-    # SPA fallback: return index.html for non-API 404s
+    # SPA fallback: if a non-API route 404s, return index.html
     @app.exception_handler(404)
     async def spa_fallback(request, exc):
         if not request.url.path.startswith("/api"):
