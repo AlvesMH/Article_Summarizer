@@ -96,10 +96,13 @@ async def upload(file: UploadFile = File(...), detail: int = Form(40), temperatu
 FRONTEND_DIST = Path(__file__).resolve().parent.parent / "frontend_dist"
 
 # Serve React build at /
+FRONTEND_DIST = Path(__file__).resolve().parent.parent / "frontend_dist"
+
+# Mount the built assets only if present (local dev may not build)
 if FRONTEND_DIST.exists():
     app.mount("/", StaticFiles(directory=str(FRONTEND_DIST), html=True), name="static")
 
-    # SPA fallback: send index.html for non-API 404s
+    # SPA fallback: return index.html for non-API 404s
     @app.exception_handler(404)
     async def spa_fallback(request, exc):
         if not request.url.path.startswith("/api"):

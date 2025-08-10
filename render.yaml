@@ -5,22 +5,27 @@ services:
     plan: free
     rootDir: .
     buildCommand: |
-      # 1) Build frontend
+      set -e
+      echo "==> Building frontend"
       cd frontend
       npm ci || npm install
-      # keep same-origin in prod (no VITE_API_BASE_URL)
       npm run build
+      ls -la dist || true
 
-      # 2) Install backend deps
+      echo "==> Installing backend deps"
       cd ..
       pip install --upgrade pip setuptools wheel
       pip install -r backend/requirements.txt
 
-      # 3) Copy the built frontend into backend/frontend_dist
+      echo "==> Copying frontend build into backend/frontend_dist"
       rm -rf backend/frontend_dist
       mkdir -p backend/frontend_dist
       cp -r frontend/dist/* backend/frontend_dist/
+      ls -la backend/frontend_dist || true
+
+    # IMPORTANT: module path + app-dir must match your layout
     startCommand: uvicorn app.main:app --app-dir backend --host 0.0.0.0 --port $PORT
+
     envVars:
       - key: SEA_LION_API_KEY
         sync: false
@@ -36,4 +41,10 @@ services:
         value: sentence-transformers/all-MiniLM-L6-v2
       - key: HF_EMBED_API
         value: https://router.huggingface.co/hf-inference/models/sentence-transformers/all-MiniLM-L6-v2/pipeline/feature-extraction
+
+    disk:
+      name: chroma-disk
+      mountPath: /data
+      sizeGB: 1
+
     
