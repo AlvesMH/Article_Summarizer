@@ -1,0 +1,33 @@
+# Optional Render spec. You can also configure services via the Render UI.
+services:
+  - type: web
+    name: sea-lion-backend
+    env: python
+    plan: free
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: SEA_LION_API_KEY
+        sync: false
+      - key: HUGGINGFACE_API_TOKEN
+        sync: false
+      - key: CHROMA_DB_DIR
+        value: /data/chroma_lessons
+      - key: SEA_LION_BASE_URL
+        value: https://api.sea-lion.ai/v1/chat/completions
+      - key: DEFAULT_SEALION_MODEL
+        value: aisingapore/Gemma-SEA-LION-v3-9B-IT
+      - key: HF_EMBED_MODEL
+        value: sentence-transformers/all-MiniLM-L6-v2
+      - key: HF_EMBED_API
+        value: https://router.huggingface.co/hf-inference/models/sentence-transformers/all-MiniLM-L6-v2/pipeline/feature-extraction
+    disk:
+      name: chroma-disk
+      mountPath: /data
+      sizeGB: 1
+  - type: static
+    name: sea-lion-frontend
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
