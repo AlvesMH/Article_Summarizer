@@ -93,23 +93,19 @@ async def upload(file: UploadFile = File(...), detail: int = Form(40), temperatu
         "stats": {"chunks_total": len(chunks), "chunks_used": len(idxs)}
     }
 
-# ---------- Static (React build) ----------
-# Where the React build gets placed by the Render build step
-# We’ll point to ../../frontend/dist relative to this file (backend/app/main.py)
 FRONTEND_DIST = Path(__file__).resolve().parent.parent / "frontend_dist"
-# Alternatively, read from env:
-# FRONTEND_DIST = Path(os.getenv("FRONTEND_DIST", Path(__file__).resolve().parent.parent / "frontend_dist"))
 
-# Mount the built assets (served at root). This must come AFTER /api routes.
+# Serve React build at /
 if FRONTEND_DIST.exists():
     app.mount("/", StaticFiles(directory=str(FRONTEND_DIST), html=True), name="static")
 
-    # SPA fallback so /route-in-react returns index.html
+    # SPA fallback: send index.html for non-API 404s
     @app.exception_handler(404)
     async def spa_fallback(request, exc):
-        index_file = FRONTEND_DIST / "index.html"
-        if index_file.exists() and not request.url.path.startswith("/api"):
-            return FileResponse(index_file)
+        if not request.url.path.startswith("/api"):
+            index = FRONTEND_DIST / "index.html"
+            if index.exists():
+                return FileResponse(index)
         raise exc
     
 @app.get("/healthz")
