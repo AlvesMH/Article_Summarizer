@@ -1,12 +1,26 @@
-# Optional Render spec. You can also configure services via the Render UI.
 services:
   - type: web
-    name: sea-lion-backend
+    name: sea-lion-app
     env: python
     plan: free
-    rootDir: backend
-    buildCommand: pip install -r requirements.txt
-    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    rootDir: .
+    buildCommand: |
+      # 1) Build frontend
+      cd frontend
+      npm ci || npm install
+      # same-origin API, no base needed:
+      # VITE_API_BASE_URL left empty so fetch('/api/...') works
+      npm run build
+
+      # 2) Install backend deps
+      cd ..
+      pip install -r backend/requirements.txt
+
+      # 3) Place the built frontend where FastAPI can serve it
+      rm -rf backend/frontend_dist
+      mkdir -p backend/frontend_dist
+      cp -r frontend/dist/* backend/frontend_dist/
+    startCommand: uvicorn app.main:app --app-dir backend --host 0.0.0.0 --port $PORT
     envVars:
       - key: SEA_LION_API_KEY
         sync: false
@@ -25,9 +39,5 @@ services:
     disk:
       name: chroma-disk
       mountPath: /data
-      sizeGB: 1
-  - type: static
-    name: sea-lion-frontend
-    rootDir: frontend
-    buildCommand: npm install && npm run build
-    staticPublishPath: dist
+      
+

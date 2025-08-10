@@ -1,4 +1,4 @@
-export const API_BASE = import.meta.env.VITE_API_BASE_URL || '';
+export const API_BASE = '';
 
 export async function postJSON(path, body) {
   const res = await fetch(`${API_BASE}/api/${path}`, {
