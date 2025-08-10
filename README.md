@@ -1,6 +1,6 @@
 # Sea Lion Academic Summarizer (React + FastAPI)
 
-# ![LIVE-DEMO]((https://summarizer-ifvu.onrender.com)
+# [LIVE-DEMO](https://summarizer-ifvu.onrender.com/)
 
 A modern academic article summarizer with a React (Vite) frontend and a FastAPI backend.
 It uses **Sea Lion** as the LLM and **Hugging Face Router** for embeddings, storing vectors in **ChromaDB**.
